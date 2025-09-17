@@ -1,0 +1,45 @@
+{
+  "name": "runlayer",
+  "version": "0.1.0",
+  "description": "The trust layer for AI - Validate AI outputs with cryptographic proof",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "type-check": "turbo run type-check"
+  },
+  "devDependencies": {
+    "@turbo/gen": "^1.10.12",
+    "turbo": "^1.10.12",
+    "prettier": "^3.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "typescript": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/runlayer/runlayer.git"
+  },
+  "keywords": [
+    "ai",
+    "validation",
+    "trust",
+    "proof",
+    "cryptographic",
+    "verification"
+  ],
+  "author": "RunLayer Team",
+  "license": "MIT"
+}
