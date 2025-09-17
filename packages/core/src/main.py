@@ -16,6 +16,7 @@ import logging
 import time
 import uuid
 from typing import Dict, Any, Optional
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,6 +28,7 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
 from .config import settings
+from .database import init_db, close_db
 
 # Configure basic logging with correlation IDs
 logging.basicConfig(
@@ -162,13 +164,28 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise credentials_exception
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan - initialize and cleanup database."""
+    # Startup
+    logger.info("Starting RunLayer Core API")
+    await init_db()
+    
+    yield
+    
+    # Shutdown
+    logger.info("Shutting down RunLayer Core API")
+    await close_db()
+
+
 # Create FastAPI application
 app = FastAPI(
     title="RunLayer Core API",
     description="The trust layer for AI - Validate AI outputs with cryptographic proof",
     version="0.1.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Add middleware (order matters - last added runs first)

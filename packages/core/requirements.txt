@@ -1,16 +1,22 @@
-# Story 1: API Gateway Foundation - Minimal Dependencies
+# Stories 1 & 2: API Gateway + Multi-Tenant Database
 # Only what's needed for the acceptance criteria
 
-# FastAPI with async/await support
+# Story 1: FastAPI with async/await support
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 
-# JWT authentication with refresh tokens
+# Story 1: JWT authentication with refresh tokens
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.6
 
-# Rate limiting with Redis
+# Story 1: Rate limiting with Redis
 redis==5.0.1
+
+# Story 2: Multi-tenant PostgreSQL database
+sqlalchemy[asyncio]==2.0.23
+asyncpg==0.29.0
+alembic==1.12.1
+pydantic==2.5.0
 
 # CORS (included with FastAPI)
 # No additional dependency needed
