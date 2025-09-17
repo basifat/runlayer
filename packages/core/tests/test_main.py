@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 import time
 
-from src.main_tightened import app
+from src.main import app
 
 client = TestClient(app)
 

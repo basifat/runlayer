@@ -29,7 +29,7 @@ import redis.asyncio as redis
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
-from .config import settings, get_settings
+from .config import settings
 from .database import init_db, close_db
 
 # 12-Factor: Logs as event streams
