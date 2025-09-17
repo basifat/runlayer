@@ -243,9 +243,13 @@ async def login(credentials: Dict[str, str]):
 
 
 @app.post("/auth/refresh", tags=["Authentication"])
-async def refresh_token(refresh_token: str):
+async def refresh_token(request: Dict[str, str]):
     """Refresh JWT access token."""
     try:
+        refresh_token = request.get("refresh_token")
+        if not refresh_token:
+            raise HTTPException(status_code=422, detail="refresh_token is required")
+            
         payload = jwt.decode(
             refresh_token, 
             settings.JWT_SECRET_KEY, 

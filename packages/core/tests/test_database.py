@@ -1,19 +1,25 @@
 """
-Tests for Story 2: Multi-Tenant Database Setup (Senior Developer Approach)
+Comprehensive Unit Tests for database.py - Multi-Tenant Database Setup
 
-Tests focus on:
+Tests ALL core functionality to ensure 80%+ coverage:
 - Repository pattern functionality
 - Performance requirements (<100ms validator lookups)
 - Multi-tenant isolation (simple owner_id filtering)
 - Pydantic validation
 - Database operations
+- DRY mixins (UUIDMixin, TimestampMixin, TenantMixin)
+- DatabaseService functionality
+- Error handling and edge cases
 """
 
 import pytest
 import asyncio
+import time
 from datetime import datetime
+from unittest.mock import AsyncMock, patch, MagicMock
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import select
+from pydantic import ValidationError
 
 from src.database import (
     Base, 
