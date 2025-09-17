@@ -1,0 +1,254 @@
+# RunLayer Stories Configuration for Automated PR Generation
+
+stories:
+  story_001:
+    id: "001"
+    title: "API Gateway Foundation"
+    type: "feat"
+    priority: "high"
+    milestone: "Phase 1: Foundation"
+    backlog_link: "./backlog_part_1_updated.md#story-1-api-gateway-foundation"
+    assignees: []
+    
+    implementation_summary: |
+      Implemented the core FastAPI application with comprehensive middleware stack for the RunLayer API Gateway. 
+      This establishes the foundation for all API operations with enterprise-grade features including authentication, 
+      rate limiting, request tracing, and structured logging.
+    
+    key_features:
+      - "FastAPI application with async/await support"
+      - "JWT-based authentication middleware (placeholder for Story 4)"
+      - "Redis-based distributed rate limiting"
+      - "Request correlation ID tracking"
+      - "Structured logging with correlation IDs"
+      - "CORS middleware for cross-origin requests"
+      - "Comprehensive error handling"
+      - "Health check and metrics endpoints"
+    
+    performance:
+      - "p99 API response time < 300ms architecture"
+      - "Async/await throughout for maximum concurrency"
+      - "Connection pooling for database and Redis"
+      - "Serverless-ready with NullPool configuration"
+    
+    security:
+      - "JWT authentication framework ready"
+      - "Input validation with Pydantic"
+      - "SQL injection prevention with SQLAlchemy ORM"
+      - "CORS with explicit allowed origins"
+      - "Structured audit logging with correlation IDs"
+    
+    files_added:
+      - "packages/core/src/main.py - FastAPI application"
+      - "packages/core/src/config.py - Configuration management"
+      - "packages/core/src/database.py - Database connection"
+      - "packages/core/src/middleware/ - Middleware components"
+      - "packages/core/src/routers/ - API route placeholders"
+      - "packages/core/tests/ - Comprehensive test suite"
+      - "packages/core/requirements.txt - Python dependencies"
+    
+    files_to_commit:
+      - "packages/core/"
+      - ".github/PULL_REQUEST_TEMPLATE/"
+      - "PR_001_API_Gateway_Foundation.md"
+
+  story_002:
+    id: "002"
+    title: "Multi-Tenant Database Setup (SDK Extended)"
+    type: "feat"
+    priority: "high"
+    milestone: "Phase 1: Foundation"
+    backlog_link: "./backlog_part_1_updated.md#story-2-multi-tenant-database-setup---extended"
+    
+    implementation_summary: |
+      Extended the database architecture to support both SaaS users and SDK developers with multi-tenant isolation,
+      validator registry tables, and SDK workspace management.
+    
+    key_features:
+      - "PostgreSQL with row-level security (multi-tenant SaaS)"
+      - "SDK workspace isolation (developer accounts)"
+      - "Local ProofLake schema compatibility"
+      - "Validator registry tables (code + metadata)"
+      - "Replay job tracking tables"
+      - "Validator version management (semantic versioning)"
+      - "Code bundle storage (WASM + metadata)"
+      - "Local-to-cloud sync tracking"
+      - "Developer workspace quotas"
+    
+    performance:
+      - "<100ms query time for validator lookups"
+      - "Support 10K concurrent SDK connections"
+      - "1M+ validator executions/day capacity"
+    
+    files_to_commit:
+      - "packages/core/src/models/"
+      - "packages/core/alembic/"
+      - "packages/core/src/database.py"
+
+  story_002a:
+    id: "002A"
+    title: "Python SDK Foundation"
+    type: "feat"
+    priority: "high"
+    milestone: "Phase 1: Foundation"
+    backlog_link: "./backlog_part_1_updated.md#story-2a-python-sdk-foundation"
+    
+    implementation_summary: |
+      Created the core Python SDK with @validator decorator, local execution environment, and type-safe API.
+      This enables developers to write validators as Python code and integrate AI validation into existing workflows.
+    
+    key_features:
+      - "Python package: pip install runlayer"
+      - "Validator decorator: @validator(name='...', version='...')"
+      - "Local execution environment (WASM sandbox)"
+      - "Type hints and IDE support (mypy compatible)"
+      - "Async/await support for I/O operations"
+    
+    performance:
+      - "Validator execution <2 seconds locally"
+      - "Package size <50MB"
+      - "Python 3.8+ compatibility"
+    
+    files_to_commit:
+      - "packages/sdk-python/"
+      - "packages/sdk-python/runlayer/"
+      - "packages/sdk-python/tests/"
+      - "packages/sdk-python/setup.py"
+
+  story_002b:
+    id: "002B"
+    title: "Local ProofLake"
+    type: "feat"
+    priority: "high"
+    milestone: "Phase 1: Foundation"
+    backlog_link: "./backlog_part_1_updated.md#story-2b-local-prooflake"
+    
+    implementation_summary: |
+      Implemented SQLite-based local storage for validation results during development, with schema compatibility
+      to cloud ProofLake and sync mechanisms for team collaboration.
+    
+    key_features:
+      - "SQLite-based local storage"
+      - "Schema compatible with cloud ProofLake"
+      - "Local web UI for browsing results"
+      - "Export/import capabilities (JSON/CSV)"
+      - "Sync mechanism with cloud ProofLake"
+    
+    performance:
+      - "<1GB storage for 10K validations"
+      - "<100ms query performance locally"
+      - "Automatic cleanup of old data"
+    
+    files_to_commit:
+      - "packages/sdk-python/runlayer/local/"
+      - "packages/local-ui/"
+
+  story_002c:
+    id: "002C"
+    title: "CLI Tools Foundation"
+    type: "feat"
+    priority: "high"
+    milestone: "Phase 1: Foundation"
+    backlog_link: "./backlog_part_1_updated.md#story-2c-cli-tools-foundation"
+    
+    implementation_summary: |
+      Created comprehensive CLI tools for validator development and management, enabling developers to manage
+      validators and proofs from command line with integration into development workflows.
+    
+    key_features:
+      - "runlayer init - Initialize workspace"
+      - "runlayer test - Run validators locally"
+      - "runlayer sync - Sync with cloud ProofLake"
+      - "runlayer publish - Publish validator to registry"
+      - "runlayer replay - Run replay jobs"
+    
+    performance:
+      - "Commands complete <30 seconds"
+      - "Helpful error messages and progress bars"
+      - "Shell completion support"
+    
+    files_to_commit:
+      - "packages/cli/"
+      - "packages/sdk-python/runlayer/cli/"
+
+  story_016a:
+    id: "016A"
+    title: "Chrome Extension Auto-Suggest Engine"
+    type: "feat"
+    priority: "high"
+    milestone: "Phase 1: Foundation"
+    backlog_link: "./backlog_part_1_updated.md#story-16a-auto-suggest-validator-engine"
+    
+    implementation_summary: |
+      Enhanced Chrome extension with intelligent validator suggestions, real-time AI output analysis,
+      and integration with popular AI tools for automatic error detection.
+    
+    key_features:
+      - "Context-aware validator suggestions"
+      - "Real-time analysis of AI outputs"
+      - "Integration with popular AI tools (ChatGPT, Claude, etc.)"
+      - "One-click validator application"
+      - "Suggestion learning from user feedback"
+      - "ML model for suggestion relevance"
+      - "User behavior learning"
+      - "Workspace-specific suggestions"
+      - "Community validator recommendations"
+    
+    performance:
+      - "Suggestions appear <2 seconds"
+      - "Analysis runs without blocking UI"
+      - "<10MB memory usage"
+    
+    files_to_commit:
+      - "packages/chrome-extension/src/auto-suggest/"
+      - "packages/chrome-extension/src/ml-models/"
+      - "packages/chrome-extension/manifest.json"
+
+# Configuration for automated PR generation
+pr_config:
+  default_labels:
+    - "enhancement"
+    - "high-priority"
+  
+  branch_prefix: "feature/story-"
+  
+  commit_message_template: |
+    {type}: {title} (Story #{id})
+    
+    {implementation_summary}
+    
+    Key Features:
+    {key_features}
+    
+    Performance:
+    {performance}
+    
+    Security:
+    {security}
+    
+    Files Added:
+    {files_added}
+    
+    Closes #{id}
+  
+  auto_labels_by_type:
+    feat: ["enhancement"]
+    fix: ["bug"]
+    docs: ["documentation"]
+    refactor: ["refactor"]
+    test: ["testing"]
+    chore: ["maintenance"]
+
+# Batch processing configurations
+batch_configs:
+  phase_1_foundation:
+    stories: ["001", "002", "002A", "002B", "002C", "016A"]
+    description: "Phase 1: Core Foundation + SDK"
+    
+  phase_2_sdk:
+    stories: ["056", "057", "058", "059", "060"]
+    description: "Phase 2: Advanced SDK Features"
+    
+  phase_2_marketplace:
+    stories: ["066", "067", "068", "069", "070"]
+    description: "Phase 2: Marketplace & Registry"

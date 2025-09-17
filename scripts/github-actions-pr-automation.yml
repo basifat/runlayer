@@ -1,0 +1,114 @@
+# GitHub Actions Workflow for Automated PR Creation
+# Place this in .github/workflows/auto-pr-creation.yml
+
+name: Automated PR Creation
+
+on:
+  workflow_dispatch:
+    inputs:
+      story_ids:
+        description: 'Comma-separated story IDs (e.g., 001,002,002A)'
+        required: true
+        type: string
+      auto_commit:
+        description: 'Automatically commit changes'
+        required: false
+        type: boolean
+        default: false
+      batch_config:
+        description: 'Use batch configuration (phase_1_foundation, phase_2_sdk, etc.)'
+        required: false
+        type: string
+
+  # Trigger on push to specific branches (story implementation branches)
+  push:
+    branches:
+      - 'implement/story-*'
+
+jobs:
+  create-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+          
+      - name: Setup GitHub CLI
+        uses: cli/cli@v2.20.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config --global user.name "RunLayer Bot"
+          git config --global user.email "bot@runlayer.com"
+      
+      - name: Make script executable
+        run: chmod +x scripts/auto-pr-generator.py
+      
+      - name: Generate PRs from manual trigger
+        if: github.event_name == 'workflow_dispatch' && inputs.story_ids != ''
+        run: |
+          if [ -n "${{ inputs.batch_config }}" ]; then
+            python scripts/auto-pr-generator.py \
+              --batch-config "${{ inputs.batch_config }}" \
+              ${{ inputs.auto_commit == 'true' && '--auto-commit' || '' }}
+          else
+            IFS=',' read -ra STORY_IDS <<< "${{ inputs.story_ids }}"
+            python scripts/auto-pr-generator.py \
+              "${STORY_IDS[@]}" \
+              ${{ inputs.auto_commit == 'true' && '--auto-commit' || '' }}
+          fi
+      
+      - name: Generate PR from branch push
+        if: github.event_name == 'push' && startsWith(github.ref_name, 'implement/story-')
+        run: |
+          # Extract story ID from branch name
+          STORY_ID=$(echo "${{ github.ref_name }}" | sed 's/implement\/story-//' | sed 's/-.*//')
+          echo "Detected story ID: $STORY_ID"
+          
+          python scripts/auto-pr-generator.py "$STORY_ID" --auto-commit
+      
+      - name: Comment on related issues
+        if: success()
+        run: |
+          echo "PRs created successfully! Check the Actions summary for details."
+
+  notify-slack:
+    needs: create-prs
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Notify Slack on success
+        if: needs.create-prs.result == 'success'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: "✅ Automated PR creation completed successfully!"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      - name: Notify Slack on failure
+        if: needs.create-prs.result == 'failure'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: "❌ Automated PR creation failed. Check the workflow logs."
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
