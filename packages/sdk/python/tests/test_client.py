@@ -153,6 +153,7 @@ class TestRunLayerClient:
         for i in range(3):
             proof_data = sample_proof_data.copy()
             proof_data["input_data"] = {"x": i}
+            proof_data["workspace_id"] = test_client.workspace.id  # Use correct workspace_id
             proof = RunProof.create_proof(**proof_data)
             test_client.store_proof(proof)
         
@@ -232,6 +233,7 @@ class TestRunLayerClient:
         for i in range(5):
             proof_data = sample_proof_data.copy()
             proof_data["input_data"] = {"x": i}
+            proof_data["workspace_id"] = test_client.workspace.id  # Use correct workspace_id
             proof = RunProof.create_proof(**proof_data)
             test_client.store_proof(proof)
         
@@ -317,3 +319,26 @@ class TestClientConfiguration:
         assert config.sync_interval_seconds == 300  # Default
         assert config.encrypt_local_storage == True  # Default
         assert config.batch_sync_size == 50  # Default
+    
+    def test_default_client_functions(self, temp_dir):
+        """Test default client getter and setter functions."""
+        from runlayer import get_default_client, set_default_client
+        
+        # Reset the default client to None first
+        import runlayer
+        runlayer._default_client = None
+        
+        # Get default should create a new client
+        default_client = get_default_client()
+        assert default_client is not None
+        assert isinstance(default_client, RunLayerClient)
+        
+        # Create a test client
+        test_client = RunLayerClient(workspace="test-default", storage_path=temp_dir)
+        
+        # Set as default
+        set_default_client(test_client)
+        
+        # Get default should return the same client
+        new_default_client = get_default_client()
+        assert new_default_client is test_client

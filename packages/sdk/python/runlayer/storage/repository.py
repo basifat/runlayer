@@ -54,6 +54,22 @@ class IProofRepository(Protocol):
     def mark_synced(self, proof_id: str) -> bool:
         """Mark proof as synced to cloud."""
         ...
+    
+    def get_proof(self, proof_id: str) -> Optional[RunProof]:
+        """Get proof by ID (alias for get_by_id)."""
+        ...
+    
+    def list_proofs(self, workspace_id: str, validator_name: Optional[str] = None, limit: int = 100, offset: int = 0) -> List[RunProof]:
+        """List proofs (alias for list_by_workspace)."""
+        ...
+    
+    def find_proof_by_input_hash(self, validator_name: str, validator_version: str, input_hash: str) -> Optional[RunProof]:
+        """Find proof by input hash (alias for find_by_input_hash)."""
+        ...
+    
+    def cleanup_old_proofs(self, workspace_id: str, days: int = 30) -> int:
+        """Clean up old proofs older than specified days."""
+        ...
 
 
 class IWorkspaceRepository(Protocol):
@@ -164,6 +180,10 @@ class SQLAlchemyProofRepository(IProofRepository):
                 return True
                 
         except Exception as e:
+            # Check if it's a duplicate key error - this is actually OK
+            if "UNIQUE constraint failed" in str(e) and "proofs.id" in str(e):
+                logger.debug("Proof already exists", proof_id=proof.id)
+                return True  # Proof already exists, which is fine
             logger.error("Failed to create proof", proof_id=proof.id, error=str(e))
             return False
     
@@ -284,6 +304,40 @@ class SQLAlchemyProofRepository(IProofRepository):
         except Exception as e:
             logger.error("Failed to get proof stats", workspace_id=workspace_id, error=str(e))
             return {"total_proofs": 0, "synced_proofs": 0, "pending_sync": 0, "unique_validators": 0}
+    
+    # Backward compatibility methods (aliases)
+    def get_proof(self, proof_id: str) -> Optional[RunProof]:
+        """Get proof by ID (backward compatibility alias)."""
+        return self.get_by_id(proof_id)
+    
+    def list_proofs(self, workspace_id: str, validator_name: Optional[str] = None, limit: int = 100, offset: int = 0) -> List[RunProof]:
+        """List proofs (backward compatibility alias)."""
+        return self.list_by_workspace(workspace_id, validator_name, limit, offset)
+    
+    def find_proof_by_input_hash(self, validator_name: str, validator_version: str, input_hash: str) -> Optional[RunProof]:
+        """Find proof by input hash (backward compatibility alias)."""
+        return self.find_by_input_hash(validator_name, validator_version, input_hash)
+    
+    def cleanup_old_proofs(self, workspace_id: str, days: int = 30) -> int:
+        """Clean up old proofs older than specified days."""
+        try:
+            from datetime import datetime, timedelta
+            cutoff_date = datetime.utcnow() - timedelta(days=days)
+            
+            with self.db_manager.get_session() as session:
+                deleted = session.query(ProofRecord).filter(
+                    and_(
+                        ProofRecord.workspace_id == workspace_id,
+                        ProofRecord.created_at < cutoff_date
+                    )
+                ).delete()
+                
+                logger.info("Cleaned up old proofs", workspace_id=workspace_id, deleted_count=deleted, days=days)
+                return deleted
+                
+        except Exception as e:
+            logger.error("Failed to cleanup old proofs", workspace_id=workspace_id, error=str(e))
+            return 0
     
     def _record_to_proof(self, record: ProofRecord) -> RunProof:
         """Convert database record to RunProof model."""

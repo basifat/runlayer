@@ -144,7 +144,7 @@ def validator(
                 
                 try:
                     result = func(*args, **kwargs)
-                    execution_time_ms = int((time.perf_counter() - start_time) * 1000)
+                    execution_time_ms = max(1, int((time.perf_counter() - start_time) * 1000))
                     
                     logger.debug("Validator executed successfully",
                                validator=config.name,
@@ -153,7 +153,7 @@ def validator(
                                correlation_id=correlation_id)
                     
                 except Exception as e:
-                    execution_time_ms = int((time.perf_counter() - start_time) * 1000)
+                    execution_time_ms = max(1, int((time.perf_counter() - start_time) * 1000))
                     
                     logger.error("Validator execution failed",
                                validator=config.name,

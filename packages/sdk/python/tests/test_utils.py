@@ -261,7 +261,7 @@ class TestCrypto:
 class TestUtilsIntegration:
     """Test integration between utility modules."""
     
-    def test_logging_with_crypto_operations(self, temp_workspace_dir):
+    def test_logging_with_crypto_operations(self, temp_dir):
         """Test logging during crypto operations."""
         logger = get_logger("crypto_test")
         
@@ -269,7 +269,7 @@ class TestUtilsIntegration:
         corr_id = set_correlation_id("crypto-test-123")
         
         with PerformanceLogger(logger, "key_generation"):
-            key_manager = KeyManager(temp_workspace_dir)
+            key_manager = KeyManager(temp_dir)
             private_key = key_manager.get_private_key()
             
             # Sign some data
@@ -278,6 +278,20 @@ class TestUtilsIntegration:
             
             assert signature is not None
             assert len(signature) > 0
+    
+    def test_json_logging_format(self):
+        """Test JSON logging format."""
+        from runlayer.utils.logging import setup_logging
+        
+        # Configure with JSON format
+        setup_logging(json_format=True)
+        
+        # Get a logger and test it works
+        logger = get_logger("json_test")
+        logger.info("Test JSON logging")
+        
+        # Should not raise any errors
+        assert True
     
     def test_error_handling_in_crypto(self):
         """Test error handling in crypto operations."""

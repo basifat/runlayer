@@ -23,10 +23,12 @@ def temp_dir():
 
 
 @pytest.fixture
-def test_workspace_config(temp_dir):
+def test_workspace_config(temp_dir, request):
     """Create a test workspace configuration."""
+    # Use test node ID to create unique workspace name for test isolation
+    test_name = request.node.name.replace("[", "_").replace("]", "_").replace("::", "_")
     return WorkspaceConfig(
-        name="test-workspace",
+        name=f"test-workspace-{test_name}",
         storage_path=temp_dir,
         api_key="test-api-key",
         auto_sync=False,  # Disable auto sync in tests

@@ -106,8 +106,11 @@ class RunLayerSettings(BaseSettings):
             # For SQLite, create workspace-specific databases
             if workspace_name and workspace_name != "default":
                 base_path = Path(self.database_url.replace("sqlite:///", ""))
-                workspace_db = base_path.parent / f"{workspace_name}.db"
-                return f"sqlite:///{workspace_db}"
+                # Use storage path for database location to ensure test isolation
+                db_dir = self.storage_path / workspace_name
+                db_dir.mkdir(parents=True, exist_ok=True)
+                workspace_db = db_dir / f"{workspace_name}.db"
+                return f"sqlite:///{workspace_db.absolute()}"
         
         return self.database_url
     

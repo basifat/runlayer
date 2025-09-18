@@ -4,7 +4,7 @@ Tests for storage components - LocalProofLake and CloudSync.
 
 import pytest
 import asyncio
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch, AsyncMock, MagicMock, Mock
 from datetime import datetime, timedelta
 
 from runlayer.storage.local import LocalProofLake
@@ -237,13 +237,15 @@ class TestCloudSync:
     @pytest.mark.asyncio
     async def test_authentication_success(self, cloud_sync):
         """Test successful authentication."""
-        mock_response = AsyncMock()
+        # Create a proper mock response that behaves like httpx.Response
+        mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "access_token": "test-token",
             "refresh_token": "test-refresh",
             "expires_in": 900
         }
+        mock_response.text = ""
         
         # Mock the client directly on the cloud_sync instance
         cloud_sync._client = AsyncMock()
@@ -259,7 +261,7 @@ class TestCloudSync:
     @pytest.mark.asyncio
     async def test_authentication_failure(self, cloud_sync):
         """Test failed authentication."""
-        mock_response = AsyncMock()
+        mock_response = Mock()
         mock_response.status_code = 401
         mock_response.text = "Unauthorized"
         
@@ -288,7 +290,7 @@ class TestCloudSync:
     async def test_sync_proofs_no_proofs(self, cloud_sync, local_storage):
         """Test sync proofs when no proofs to sync."""
         # Mock successful authentication
-        mock_auth_response = AsyncMock()
+        mock_auth_response = Mock()
         mock_auth_response.status_code = 200
         mock_auth_response.json.return_value = {
             "access_token": "test-token",
@@ -321,14 +323,14 @@ class TestCloudSync:
             local_storage.store_proof(proof)
         
         # Mock successful authentication and sync
-        mock_auth_response = AsyncMock()
+        mock_auth_response = Mock()
         mock_auth_response.status_code = 200
         mock_auth_response.json.return_value = {
             "access_token": "test-token",
             "expires_in": 900
         }
         
-        mock_sync_response = AsyncMock()
+        mock_sync_response = Mock()
         mock_sync_response.status_code = 201
         
         cloud_sync._client = AsyncMock()
@@ -360,14 +362,14 @@ class TestCloudSync:
         local_storage.store_proof(proof)
         
         # Mock authentication and conflict response
-        mock_auth_response = AsyncMock()
+        mock_auth_response = Mock()
         mock_auth_response.status_code = 200
         mock_auth_response.json.return_value = {
             "access_token": "test-token",
             "expires_in": 900
         }
         
-        mock_conflict_response = AsyncMock()
+        mock_conflict_response = Mock()
         mock_conflict_response.status_code = 409
         mock_conflict_response.json.return_value = {
             "existing_proof_ids": [proof.id]
@@ -388,7 +390,7 @@ class TestCloudSync:
     @pytest.mark.asyncio
     async def test_test_connection(self, cloud_sync):
         """Test connection testing."""
-        mock_response = AsyncMock()
+        mock_response = Mock()
         mock_response.status_code = 200
         
         cloud_sync._client = AsyncMock()
@@ -402,14 +404,14 @@ class TestCloudSync:
     async def test_download_proofs(self, cloud_sync):
         """Test downloading proofs from cloud."""
         # Mock successful authentication and download
-        mock_auth_response = AsyncMock()
+        mock_auth_response = Mock()
         mock_auth_response.status_code = 200
         mock_auth_response.json.return_value = {
             "access_token": "test-token",
             "expires_in": 900
         }
         
-        mock_download_response = AsyncMock()
+        mock_download_response = Mock()
         mock_download_response.status_code = 200
         mock_download_response.json.return_value = {
             "proofs": [

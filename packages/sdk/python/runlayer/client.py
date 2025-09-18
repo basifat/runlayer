@@ -93,8 +93,16 @@ class RunLayerClient:
         self.workspace_name = workspace
         settings = get_settings()
         
+        # Determine storage path first
+        base_path = Path(storage_path) if storage_path else settings.storage_path
+        workspace_path = base_path / workspace
+        
+        # Create temporary settings with correct storage path for database URL generation
+        from .config import RunLayerSettings
+        temp_settings = RunLayerSettings(storage_path=base_path)
+        database_url = temp_settings.get_database_url(workspace)
+        
         # Initialize database manager
-        database_url = settings.get_database_url(workspace)
         self.db_manager = DatabaseManager(database_url)
         
         # Dependency injection - use provided repositories or create defaults
@@ -103,8 +111,6 @@ class RunLayerClient:
         self.http_client = http_client or create_http_client(api_key)
         
         # Load or create workspace
-        base_path = Path(storage_path) if storage_path else settings.storage_path
-        workspace_path = base_path / workspace
         self.workspace = self._load_or_create_workspace(
             workspace, workspace_path, api_key, auto_sync, **config_overrides
         )
@@ -128,7 +134,17 @@ class RunLayerClient:
     @property
     def _cloud_sync(self):
         """Backward compatibility property for tests."""
-        return None  # Will be created lazily when needed
+        return getattr(self, '_cloud_sync_instance', None)
+    
+    @_cloud_sync.setter
+    def _cloud_sync(self, value):
+        """Setter for _cloud_sync property."""
+        self._cloud_sync_instance = value
+    
+    @property
+    def api_base_url(self):
+        """Backward compatibility property for API base URL."""
+        return self.workspace.config.api_base_url
     
     def _load_or_create_workspace(
         self,
@@ -195,9 +211,13 @@ class RunLayerClient:
                 if success:
                     logger.info("Proof stored successfully", proof_id=proof.id)
                     
-                    # Trigger auto sync if enabled
+                    # Trigger auto sync if enabled (but don't fail if no event loop)
                     if self.workspace.config.auto_sync:
-                        asyncio.create_task(self._auto_sync())
+                        try:
+                            asyncio.create_task(self._auto_sync())
+                        except RuntimeError:
+                            # No event loop running, skip auto sync
+                            logger.debug("No event loop for auto sync, skipping")
                     
                     return True
                 else:
@@ -265,6 +285,35 @@ class RunLayerClient:
             offset=offset
         )
     
+    def get_workspace_stats(self) -> Dict[str, Any]:
+        """
+        Get workspace statistics.
+        
+        Returns:
+            Dictionary with workspace statistics
+        """
+        stats = self.proof_repository.get_stats(self.workspace.id)
+        
+        # Update workspace with current stats
+        self.workspace_repository.update_stats(
+            self.workspace.id,
+            stats["total_proofs"],
+            stats["synced_proofs"],
+            0.0  # storage_mb - will be calculated properly later
+        )
+        
+        return {
+            **stats,
+            "workspace_id": self.workspace.id,
+            "workspace_name": self.workspace.config.name,
+            "storage_path": str(self.workspace.config.storage_path),
+            "created_at": self.workspace.created_at.isoformat() if self.workspace.created_at else None,
+            "last_accessed": self.workspace.last_accessed.isoformat() if self.workspace.last_accessed else None,
+            "auto_sync_enabled": self.workspace.config.auto_sync,
+            "has_api_key": bool(self.workspace.config.api_key),
+            "last_sync": self.workspace.last_sync.isoformat() if self.workspace.last_sync else None
+        }
+    
     async def sync_to_cloud(self, force: bool = False) -> Dict[str, Any]:
         """
         Manually sync proofs to cloud.
@@ -313,25 +362,23 @@ class RunLayerClient:
         cloud_sync = await self._get_cloud_sync()
         return await cloud_sync.download_proofs(validator_name)
     
-    def get_workspace_stats(self) -> Dict[str, Any]:
+    async def test_connection(self) -> bool:
         """
-        Get workspace statistics.
+        Test connection to RunLayer API.
         
         Returns:
-            Dictionary with workspace statistics
+            True if connection successful, False otherwise
         """
-        stats = self.local_storage.get_stats(self.workspace.id)
-        sync_status = self.workspace.get_sync_status()
+        if not self.workspace.config.api_key:
+            return False
         
-        return {
-            **stats,
-            **sync_status,
-            "workspace_id": self.workspace.id,
-            "workspace_name": self.workspace.config.name,
-            "storage_path": str(self.workspace.config.storage_path),
-            "created_at": self.workspace.created_at.isoformat(),
-            "last_accessed": self.workspace.last_accessed.isoformat()
-        }
+        try:
+            async with self.http_client as client:
+                return await client.test_connection()
+        except Exception as e:
+            logger.debug("Connection test failed", error=str(e))
+            return False
+    
     
     def cleanup_old_proofs(self, days: int = 30) -> int:
         """
