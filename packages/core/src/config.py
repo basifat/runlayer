@@ -6,7 +6,7 @@ Story 2: Database URL for multi-tenant PostgreSQL
 """
 
 import os
-from typing import List
+from typing import List, Optional
 
 class Settings:
     """Application settings for Stories 1 & 2."""
@@ -24,16 +24,22 @@ class Settings:
         "https://runlayer.com",   # Production domain
     ]
     
-    # Redis Configuration (Story 1)
-    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    
     # Database Configuration (Story 2)
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL", 
         "postgresql+asyncpg://localhost/runlayer"
     )
     
+    # Redis Configuration (Stories 1 & 3)
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_SENTINEL_HOSTS: Optional[str] = os.getenv("REDIS_SENTINEL_HOSTS")  # comma-separated
+    REDIS_MASTER_NAME: str = os.getenv("REDIS_MASTER_NAME", "mymaster")
+    REDIS_SOCKET_TIMEOUT: int = int(os.getenv("REDIS_SOCKET_TIMEOUT", "5"))
+    REDIS_CONNECT_TIMEOUT: int = int(os.getenv("REDIS_CONNECT_TIMEOUT", "5"))
+    REDIS_MAX_CONNECTIONS: int = int(os.getenv("REDIS_MAX_CONNECTIONS", "100"))
+    
     # Environment
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
 settings = Settings()

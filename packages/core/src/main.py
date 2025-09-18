@@ -31,6 +31,7 @@ from datetime import datetime, timedelta
 
 from .config import settings
 from .database import init_db, close_db
+from .redis import redis_manager, validator_cache, validator_queue
 
 # 12-Factor: Logs as event streams
 logging.basicConfig(
@@ -220,16 +221,18 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan - initialize and cleanup database."""
+    """Application lifespan - initialize and cleanup database and Redis."""
     # Startup
     logger.info("Starting RunLayer Core API")
     await init_db()
+    await redis_manager.initialize()
     
     yield
     
     # Shutdown
     logger.info("Shutting down RunLayer Core API")
     await close_db()
+    await redis_manager.close()
 
 
 # Create FastAPI application
@@ -289,11 +292,9 @@ async def health_check():
     }
     
     # Check Redis health
-    try:
-        await redis_client.ping()
-        health_status["services"]["redis"] = "healthy"
-    except Exception as e:
-        health_status["services"]["redis"] = f"unhealthy: {str(e)}"
+    redis_health = await redis_manager.health_check()
+    health_status["services"]["redis"] = redis_health
+    if redis_health["status"] != "healthy":
         health_status["status"] = "degraded"
     
     # Check database health (if available)

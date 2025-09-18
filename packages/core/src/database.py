@@ -57,11 +57,11 @@ class WorkspaceCreate(BaseModel):
 
 class ValidatorCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
-    version: str = Field(..., regex=r'^\d+\.\d+\.\d+$')  # Semantic versioning
+    version: str = Field(..., pattern=r'^\d+\.\d+\.\d+$')  # Semantic versioning
     description: Optional[str] = None
     code_bundle_url: str = Field(..., min_length=1)
     wasm_hash: str = Field(..., min_length=64, max_length=64)
-    metadata: dict = Field(default_factory=dict)
+    validator_metadata: dict = Field(default_factory=dict)
 
 
 # SQLAlchemy models (use framework properly)
@@ -103,7 +103,7 @@ class ValidatorRegistry(Base):
     # Code storage (use established cloud storage patterns)
     code_bundle_url: Mapped[str] = mapped_column(String(500), nullable=False)
     wasm_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    validator_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
     
     # Simple lifecycle (YAGNI - no complex versioning initially)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -282,7 +282,7 @@ class ValidatorRepository(BaseRepository):
             description=validator_data.description,
             code_bundle_url=validator_data.code_bundle_url,
             wasm_hash=validator_data.wasm_hash,
-            metadata=validator_data.metadata
+            validator_metadata=validator_data.validator_metadata
         )
         return await self.create(validator)
 
