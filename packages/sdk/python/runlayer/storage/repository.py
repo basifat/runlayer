@@ -71,6 +71,10 @@ class IWorkspaceRepository(Protocol):
         """Get workspace by name."""
         ...
     
+    def update(self, workspace: Workspace) -> bool:
+        """Update workspace record."""
+        ...
+    
     def update_stats(self, workspace_id: str, total_proofs: int, synced_proofs: int, storage_mb: float) -> bool:
         """Update workspace statistics."""
         ...
@@ -151,7 +155,7 @@ class SQLAlchemyProofRepository(IProofRepository):
                     signature=proof.signature,
                     synced_to_cloud=proof.synced_to_cloud,
                     sync_timestamp=proof.sync_timestamp,
-                    metadata=proof.metadata
+                    proof_metadata=proof.metadata
                 )
                 session.add(record)
                 session.flush()  # Ensure ID is generated
@@ -298,7 +302,7 @@ class SQLAlchemyProofRepository(IProofRepository):
             signature=record.signature,
             synced_to_cloud=record.synced_to_cloud,
             sync_timestamp=record.sync_timestamp,
-            metadata=record.metadata or {}
+            metadata=record.proof_metadata or {}
         )
 
 
@@ -358,6 +362,28 @@ class SQLAlchemyWorkspaceRepository(IWorkspaceRepository):
         except Exception as e:
             logger.error("Failed to get workspace", name=name, error=str(e))
             return None
+    
+    def update(self, workspace: Workspace) -> bool:
+        """Update workspace record."""
+        try:
+            with self.db_manager.get_session() as session:
+                updated = session.query(WorkspaceRecord).filter(WorkspaceRecord.id == workspace.id).update({
+                    WorkspaceRecord.name: workspace.config.name,
+                    WorkspaceRecord.description: workspace.config.description,
+                    WorkspaceRecord.api_key: workspace.config.api_key,
+                    WorkspaceRecord.auto_sync: workspace.config.auto_sync,
+                    WorkspaceRecord.sync_interval_seconds: workspace.config.sync_interval_seconds,
+                    WorkspaceRecord.max_proof_cache: workspace.config.max_proof_cache,
+                    WorkspaceRecord.batch_sync_size: workspace.config.batch_sync_size,
+                    WorkspaceRecord.encrypt_local_storage: workspace.config.encrypt_local_storage,
+                    WorkspaceRecord.last_accessed: datetime.utcnow()
+                })
+                
+                return updated > 0
+                
+        except Exception as e:
+            logger.error("Failed to update workspace", workspace_id=workspace.id, error=str(e))
+            return False
     
     def update_stats(self, workspace_id: str, total_proofs: int, synced_proofs: int, storage_mb: float) -> bool:
         """Update workspace statistics."""

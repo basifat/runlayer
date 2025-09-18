@@ -59,8 +59,8 @@ class ProofRecord(Base):
     synced_to_cloud = Column(Boolean, nullable=False, default=False, index=True)
     sync_timestamp = Column(DateTime, nullable=True)
     
-    # Additional metadata
-    metadata = Column(JSON, nullable=False, default=dict)
+    # Additional metadata (using proof_metadata to avoid SQLAlchemy reserved name)
+    proof_metadata = Column(JSON, nullable=False, default=dict)
     
     # Composite indexes for performance
     __table_args__ = (
@@ -89,7 +89,7 @@ class ProofRecord(Base):
             'signature': self.signature,
             'synced_to_cloud': self.synced_to_cloud,
             'sync_timestamp': self.sync_timestamp.isoformat() if self.sync_timestamp else None,
-            'metadata': self.metadata or {}
+            'metadata': self.proof_metadata or {}
         }
 
 

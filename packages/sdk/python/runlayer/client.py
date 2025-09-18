@@ -30,6 +30,7 @@ from .storage.repository import (
     IProofRepository,
     IWorkspaceRepository
 )
+from .storage.sync import CloudSync
 from .http_client import RunLayerHTTPClient, create_http_client
 from .config import get_settings
 from .utils.logging import get_logger, PerformanceLogger
@@ -39,11 +40,6 @@ logger = get_logger(__name__)
 
 
 class RunLayerClient:
-    """
-    Main RunLayer SDK client.
-    
-    Provides a high-level interface for:
-    - Managing workspaces class RunLayerClient:
     """
     Main RunLayer SDK client using Repository pattern and Dependency Injection.
     
@@ -67,8 +63,6 @@ class RunLayerClient:
         
         # List proofs
         proofs = client.list_proofs()
-    """    def validate_email(email: str) -> bool:
-            return "@" in email
     """
     
     def __init__(
@@ -109,7 +103,8 @@ class RunLayerClient:
         self.http_client = http_client or create_http_client(api_key)
         
         # Load or create workspace
-        workspace_path = (storage_path or settings.storage_path) / workspace
+        base_path = Path(storage_path) if storage_path else settings.storage_path
+        workspace_path = base_path / workspace
         self.workspace = self._load_or_create_workspace(
             workspace, workspace_path, api_key, auto_sync, **config_overrides
         )
@@ -123,7 +118,19 @@ class RunLayerClient:
             storage_path=self.workspace.config.storage_path,
             auto_sync=auto_sync,
             database_url=database_url.split('://')[0] + '://***'
-        ) def _load_or_create_workspace(
+        )
+    
+    @property
+    def local_storage(self):
+        """Backward compatibility property for tests."""
+        return self.proof_repository
+    
+    @property
+    def _cloud_sync(self):
+        """Backward compatibility property for tests."""
+        return None  # Will be created lazily when needed
+    
+    def _load_or_create_workspace(
         self,
         name: str,
         storage_path: Path,

@@ -20,7 +20,7 @@ from tenacity import (
     before_sleep_log,
     after_log
 )
-import structlog
+import logging
 
 from .config import get_settings
 from .utils.logging import get_logger
@@ -79,8 +79,8 @@ class RunLayerHTTPClient:
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=4, max=10),
         retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError)),
-        before_sleep=before_sleep_log(logger, structlog.INFO),
-        after=after_log(logger, structlog.INFO)
+        before_sleep=before_sleep_log(logger, logging.INFO),
+        after=after_log(logger, logging.INFO)
     )
     async def _make_request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """

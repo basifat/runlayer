@@ -11,7 +11,8 @@ Following senior developer best practices:
 import os
 from pathlib import Path
 from typing import Optional, Dict, Any
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 # Load environment variables from .env file if it exists
@@ -69,14 +70,16 @@ class RunLayerSettings(BaseSettings):
         env_file_encoding = "utf-8"
         case_sensitive = False
         
-    @validator("storage_path", pre=True)
+    @field_validator("storage_path", mode="before")
+    @classmethod
     def validate_storage_path(cls, v):
         """Convert string paths to Path objects."""
         if isinstance(v, str):
             return Path(v).expanduser()
         return v
     
-    @validator("log_level")
+    @field_validator("log_level")
+    @classmethod
     def validate_log_level(cls, v):
         """Validate log level."""
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
@@ -84,7 +87,8 @@ class RunLayerSettings(BaseSettings):
             raise ValueError(f"Log level must be one of: {valid_levels}")
         return v.upper()
     
-    @validator("log_format")
+    @field_validator("log_format")
+    @classmethod
     def validate_log_format(cls, v):
         """Validate log format."""
         valid_formats = ["json", "console"]
