@@ -32,6 +32,7 @@ from datetime import datetime, timedelta
 from .config import settings
 from .database import init_db, close_db
 from .redis import redis_manager, validator_cache, validator_queue
+from .validators.api import router as validators_router
 
 # 12-Factor: Logs as event streams
 logging.basicConfig(
@@ -238,12 +239,15 @@ async def lifespan(app: FastAPI):
 # Create FastAPI application
 app = FastAPI(
     title="RunLayer Core API",
-    description="The trust layer for AI - Validate AI outputs with cryptographic proof",
+    description="Production-ready API Gateway for RunLayer validator execution platform",
     version="0.1.0",
+    lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc",
-    lifespan=lifespan
+    redoc_url="/redoc"
 )
+
+# Include validator API routes
+app.include_router(validators_router)
 
 # DRY: Middleware configuration function
 def configure_middleware(app: FastAPI) -> None:
