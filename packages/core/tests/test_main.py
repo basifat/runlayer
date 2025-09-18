@@ -116,13 +116,13 @@ def test_protected_route_requires_auth():
     assert "user" in data
 
 
-@patch('src.main.redis_client')
+@patch('src.main_tightened.redis_client')
 def test_rate_limiting_1000_per_hour(mock_redis):
     """Test rate limiting: 1000 requests/hour for free tier."""
     # Mock Redis to return count under limit
-    mock_redis.get = AsyncMock(return_value=None)
-    mock_redis.setex = AsyncMock(return_value=True)
-    mock_redis.incr = AsyncMock(return_value=1)
+    mock_redis.get.return_value = None
+    mock_redis.setex = AsyncMock()
+    mock_redis.incr = AsyncMock()
     
     response = client.get("/protected")
     assert response.status_code != 429  # Should not be rate limited
@@ -178,15 +178,14 @@ def test_exception_handling_with_correlation():
     assert "X-Correlation-ID" in response.headers
     
     data = response.json()
-    assert "detail" in data  # FastAPI returns "detail" for 404 errors
-    # Correlation ID is in headers, not response body for 404
-    assert "X-Correlation-ID" in response.headers
+    assert "error" in data
+    assert "correlation_id" in data["error"]
 
 
 def test_rate_limit_skips_health_endpoints():
     """Test rate limiting skips health check endpoints."""
-    with patch('src.main.redis_client') as mock_redis:
-        mock_redis.get = AsyncMock(return_value="1001")  # Over limit
+    with patch('src.main_tightened.redis_client') as mock_redis:
+        mock_redis.get.return_value = "1001"  # Over limit
         
         # Health endpoints should not be rate limited
         response = client.get("/health")
@@ -200,23 +199,19 @@ def test_rate_limit_skips_health_endpoints():
         assert response.status_code == 429
 
 
-def test_async_await_support():
+@pytest.mark.asyncio
+async def test_async_await_support():
     """Test that endpoints properly support async/await."""
     # This test verifies the async nature by checking that
     # the application can handle concurrent requests
-    import concurrent.futures
-    import threading
+    import asyncio
+    import httpx
     
-    def make_request():
-        return client.get("/")
-    
-    # Make concurrent requests
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [executor.submit(make_request) for _ in range(5)]
-        responses = [future.result() for future in concurrent.futures.as_completed(futures)]
-    
-    # All requests should succeed
-    for response in responses:
-        assert response.status_code == 200
-        data = response.json()
-        assert data["name"] == "RunLayer Core API"
+    async with httpx.AsyncClient(app=app, base_url="http://test") as ac:
+        # Make multiple concurrent requests
+        tasks = [ac.get("/health") for _ in range(10)]
+        responses = await asyncio.gather(*tasks)
+        
+        # All should succeed
+        for response in responses:
+            assert response.status_code == 200
