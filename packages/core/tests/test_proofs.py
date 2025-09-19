@@ -10,7 +10,7 @@ from unittest.mock import Mock, AsyncMock, patch
 
 from src.proofs import (
     ProofData, ProofMetadata, ValidationResult, ProofFormat, ProofConfig, 
-    ProofError, JSONProofGenerator, ProofGenerator
+    ProofError, JSONProofGenerator, ProofGenerator, ProofManager, ProofStorage
 )
 
 
@@ -144,6 +144,62 @@ class TestProofGenerator:
         assert generator.stats["successful_generated"] == 1
     
     @pytest.mark.asyncio
+    async def test_validate_proof(self):
+        """Test proof validation."""
+        config = ProofConfig(enable_signing=False)
+        generator = ProofGenerator(config)
+        
+        validation_result = ValidationResult(
+            validator_id="test", execution_id="test", workspace_id="test",
+            user_id="test", input_data={}, output_data={}, is_valid=True
+        )
+        
+        proof_data = await generator.generate_proof(validation_result)
+        is_valid = await generator.validate_proof(proof_data)
+        
+        assert is_valid is True
+    
+    @pytest.mark.asyncio
+    async def test_serialize_deserialize(self):
+        """Test proof serialization and deserialization."""
+        config = ProofConfig(enable_signing=False)
+        generator = ProofGenerator(config)
+        
+        validation_result = ValidationResult(
+            validator_id="test", execution_id="test", workspace_id="test",
+            user_id="test", input_data={}, output_data={}, is_valid=True
+        )
+        
+        proof_data = await generator.generate_proof(validation_result)
+        serialized = await generator.serialize_proof(proof_data)
+        deserialized = await generator.deserialize_proof(serialized, ProofFormat.JSON)
+        
+        assert deserialized.proof_id == proof_data.proof_id
+        assert deserialized.is_valid == proof_data.is_valid
+    
+    def test_get_stats(self):
+        """Test statistics retrieval."""
+        config = ProofConfig(enable_signing=False)
+        generator = ProofGenerator(config)
+        
+        stats = generator.get_stats()
+        
+        assert "total_generated" in stats
+        assert "successful_generated" in stats
+        assert "cache_size" in stats
+        assert "supported_formats" in stats
+    
+    def test_get_supported_formats(self):
+        """Test supported formats retrieval."""
+        config = ProofConfig(enable_signing=False)
+        generator = ProofGenerator(config)
+        
+        formats = generator.get_supported_formats()
+        
+        assert ProofFormat.JSON in formats
+        assert len(formats) >= 1
+    
+    @pytest.mark.asyncio
     async def test_health_check(self):
         """Test proof generator health check."""
         config = ProofConfig(enable_signing=False)
@@ -151,3 +207,65 @@ class TestProofGenerator:
         
         health = await generator.health_check()
         assert health is True
+
+
+class TestProofManager:
+    """Test proof manager end-to-end workflow."""
+    
+    @pytest.mark.asyncio
+    @patch('src.proofs.manager.storage_manager')
+    async def test_create_proof_without_storage(self, mock_storage):
+        """Test proof creation without storage."""
+        config = ProofConfig(enable_signing=False)
+        manager = ProofManager(config)
+        
+        validation_result = ValidationResult(
+            validator_id="test", execution_id="test", workspace_id="test",
+            user_id="test", input_data={}, output_data={}, is_valid=True
+        )
+        
+        proof_data = await manager.create_proof(validation_result, store_proof=False)
+        
+        assert proof_data.proof_id is not None
+        assert proof_data.is_valid is True
+        assert manager.stats["total_proofs_generated"] == 1
+    
+    def test_get_stats(self):
+        """Test manager statistics."""
+        config = ProofConfig(enable_signing=False)
+        manager = ProofManager(config)
+        
+        stats = manager.get_stats()
+        
+        assert "total_proofs_generated" in stats
+        assert "generator_stats" in stats
+        assert "storage_stats" in stats
+        assert "config" in stats
+
+
+class TestProofStorage:
+    """Test proof storage integration."""
+    
+    def test_storage_initialization(self):
+        """Test storage initialization."""
+        mock_storage_manager = Mock()
+        config = ProofConfig()
+        
+        storage = ProofStorage(mock_storage_manager, config)
+        
+        assert storage.storage_manager == mock_storage_manager
+        assert storage.config == config
+        assert "total_stored" in storage.stats
+    
+    def test_get_stats(self):
+        """Test storage statistics."""
+        mock_storage_manager = Mock()
+        config = ProofConfig()
+        storage = ProofStorage(mock_storage_manager, config)
+        
+        stats = storage.get_stats()
+        
+        assert "total_stored" in stats
+        assert "total_retrieved" in stats
+        assert "storage_errors" in stats
+        assert "retrieval_errors" in stats

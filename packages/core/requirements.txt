@@ -25,5 +25,8 @@ botocore==1.34.0
 # Story 9: Proof generation with cryptographic signatures
 cryptography==41.0.7
 
+# Form data handling for FastAPI
+python-multipart==0.0.20
+
 # CORS (included with FastAPI)
 # No additional dependency needed

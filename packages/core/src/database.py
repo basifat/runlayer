@@ -29,6 +29,23 @@ class Base(DeclarativeBase):
     pass
 
 
+# DRY Mixins for common patterns
+class UUIDMixin:
+    """Mixin for UUID primary keys."""
+    id: Mapped[str] = mapped_column(UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4()))
+
+
+class TimestampMixin:
+    """Mixin for created_at and updated_at timestamps."""
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class TenantMixin:
+    """Mixin for workspace-based multi-tenancy."""
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("workspaces.id"), nullable=False, index=True)
+
+
 # Enums for type safety (established pattern)
 class WorkspaceType(str, Enum):
     SAAS = "saas"
