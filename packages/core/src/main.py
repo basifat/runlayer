@@ -33,6 +33,7 @@ from .config import settings
 from .database import init_db, close_db
 from .redis import redis_manager, validator_cache, validator_queue
 from .validators.api import router as validators_router
+from .storage.api import router as storage_router
 
 # 12-Factor: Logs as event streams
 logging.basicConfig(
@@ -246,8 +247,9 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Include validator API routes
+# Include API routes
 app.include_router(validators_router)
+app.include_router(storage_router)
 
 # DRY: Middleware configuration function
 def configure_middleware(app: FastAPI) -> None:
@@ -310,6 +312,17 @@ async def health_check():
             health_status["status"] = "degraded"
     except Exception as e:
         health_status["services"]["database"] = f"unhealthy: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    # Check storage health
+    try:
+        from .storage.manager import storage_manager
+        storage_healthy = await storage_manager.health_check()
+        health_status["services"]["storage"] = "healthy" if storage_healthy else "unhealthy"
+        if not storage_healthy:
+            health_status["status"] = "degraded"
+    except Exception as e:
+        health_status["services"]["storage"] = f"unhealthy: {str(e)}"
         health_status["status"] = "degraded"
     
     # Return appropriate status code

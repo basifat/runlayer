@@ -18,5 +18,9 @@ asyncpg==0.29.0
 alembic==1.12.1
 pydantic==2.5.0
 
+# Story 8: S3-compatible storage
+boto3==1.34.0
+botocore==1.34.0
+
 # CORS (included with FastAPI)
 # No additional dependency needed
