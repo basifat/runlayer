@@ -1,18 +1,19 @@
 # RunLayer Python SDK
 
-**Temporal for AI Validation** - Add validation to any Python function with a simple decorator.
+Add validation to any Python function with a simple decorator.
 
-[![PyPI version](https://badge.fury.io/py/runlayer.svg)](https://badge.fury.io/py/runlayer)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-green.svg)](https://github.com/runlayer/runlayer)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
+Not yet published to PyPI; install from the repo:
+
 ```bash
-pip install runlayer
+cd packages/sdk/python
+pip install -e .
 ```
 
 ### Basic Usage
@@ -293,8 +294,9 @@ def modern_validator(data):
 ```dockerfile
 FROM python:3.11-slim
 
-# Install RunLayer SDK
-RUN pip install runlayer
+# Install RunLayer SDK (from a checkout of this repo)
+COPY packages/sdk/python /opt/runlayer-sdk
+RUN pip install /opt/runlayer-sdk
 
 # Copy your validation code
 COPY validators/ /app/validators/
@@ -324,7 +326,7 @@ jobs:
     
     - name: Install dependencies
       run: |
-        pip install runlayer pytest
+        pip install -e packages/sdk/python pytest
         
     - name: Run validation tests
       run: |
@@ -354,8 +356,8 @@ jobs:
 **Import Error**
 ```python
 # Problem: ModuleNotFoundError: No module named 'runlayer'
-# Solution: Install the package
-pip install runlayer
+# Solution: Install the package from the repo
+pip install -e packages/sdk/python
 ```
 
 **Permission Error**
@@ -403,32 +405,19 @@ def debug_validator(data):
 - **`get_validator_info(func)`** - Get validator configuration from decorated function
 - **`is_validator(func)`** - Check if function is decorated with @validator
 
-## 🤝 Contributing
+## Development Setup
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Setup
 ```bash
-git clone https://github.com/runlayer/runlayer.git
+git clone https://github.com/basifat/runlayer.git
 cd runlayer/packages/sdk/python
-pip install -e ".[dev]"
+pip install -e .
 pytest
 ```
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔗 Links
-
-- **Documentation**: https://docs.runlayer.com/sdk/python
-- **GitHub**: https://github.com/runlayer/runlayer
-- **PyPI**: https://pypi.org/project/runlayer/
-- **Issues**: https://github.com/runlayer/runlayer/issues
-- **Discord**: https://discord.gg/runlayer
+This project is licensed under the MIT License - see the repository [LICENSE](../../../LICENSE) file for details.
 
 ---
-
-**Made with ❤️ by the RunLayer team**
 
 *Transform any Python function into a validated, cryptographically signed, and shareable proof of execution.*

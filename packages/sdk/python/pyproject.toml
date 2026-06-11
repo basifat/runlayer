@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "runlayer"
 version = "0.1.0"
-description = "RunLayer Python SDK - Temporal for AI Validation"
+description = "RunLayer Python SDK - build and run validators for AI outputs"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "RunLayer Team", email = "sdk@runlayer.com"}
+    {name = "Baba Asifat", email = "code@babatundeasifat.com"}
 ]
 maintainers = [
-    {name = "RunLayer Team", email = "sdk@runlayer.com"}
+    {name = "Baba Asifat", email = "code@babatundeasifat.com"}
 ]
 keywords = [
     "ai",

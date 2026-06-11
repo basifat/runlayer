@@ -30,7 +30,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/runlayer/runlayer.git"
+    "url": "https://github.com/basifat/runlayer.git"
   },
   "keywords": [
     "ai",
@@ -40,6 +40,6 @@
     "cryptographic",
     "verification"
   ],
-  "author": "RunLayer Team",
+  "author": "Baba Asifat",
   "license": "MIT"
 }
