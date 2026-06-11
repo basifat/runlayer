@@ -36,13 +36,13 @@ print(f"Email is valid: {result}")
 ```
 
 That's it! Your function now:
-- ✅ **Creates cryptographic proofs** for every execution
-- ✅ **Stores results locally** in SQLite (works offline)
-- ✅ **Syncs to cloud** when API key is configured
-- ✅ **Caches results** for identical inputs
-- ✅ **Signs proofs** with Ed25519 for authenticity
+- **Creates cryptographic proofs** for every execution
+- **Stores results locally** in SQLite (works offline)
+- **Syncs to cloud** when API key is configured
+- **Caches results** for identical inputs
+- **Signs proofs** with Ed25519 for authenticity
 
-## 🎯 Why RunLayer?
+## Why RunLayer?
 
 ### The Problem
 - Manual validation is error-prone and time-consuming
@@ -71,7 +71,7 @@ def check_data(data):
     return is_valid
 ```
 
-## 📚 Core Concepts
+## Core Concepts
 
 ### Validators
 A **validator** is any Python function decorated with `@validator`. It automatically:
@@ -93,7 +93,7 @@ A **RunProof** contains:
 - Independent configuration and API keys
 - Separate sync and storage quotas
 
-## 🛠 Advanced Usage
+## Advanced Usage
 
 ### Custom Configuration
 
@@ -162,7 +162,7 @@ async def sync_example():
 asyncio.run(sync_example())
 ```
 
-## 🔧 Configuration Options
+## Configuration Options
 
 ### Environment Variables
 
@@ -189,7 +189,7 @@ client = RunLayerClient(
 )
 ```
 
-## 🔒 Security Features
+## Security Features
 
 ### Cryptographic Signatures
 - **Ed25519 signatures** for all proofs
@@ -203,7 +203,7 @@ client = RunLayerClient(
 - **No sensitive data** in logs
 - **GDPR-compliant** data handling
 
-## 📊 Performance
+## Performance
 
 ### Benchmarks
 - **<50ms decorator overhead** for typical functions
@@ -226,7 +226,7 @@ def high_frequency_validation(data):
     return result
 ```
 
-## 🧪 Testing Your Validators
+## Testing Your Validators
 
 ```python
 import pytest
@@ -261,7 +261,7 @@ def test_proof_creation():
     assert proofs[0].output_data == True
 ```
 
-## 🔄 Migration & Versioning
+## Migration & Versioning
 
 ### Semantic Versioning
 ```python
@@ -288,7 +288,7 @@ def modern_validator(data):
     return new_format_result(data)
 ```
 
-## 🚀 Production Deployment
+## Production Deployment
 
 ### Docker Integration
 ```dockerfile
@@ -349,7 +349,7 @@ jobs:
         "
 ```
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -390,7 +390,7 @@ def debug_validator(data):
     return data
 ```
 
-## 📖 API Reference
+## API Reference
 
 ### Core Classes
 
