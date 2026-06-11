@@ -213,6 +213,8 @@ ipython_config.py
 local/
 
 # Local context files (development documentation)
+local_context/
+.coverage*
 
 # AWS
 .aws/
